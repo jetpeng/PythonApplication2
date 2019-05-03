@@ -1,30 +1,21 @@
-#!/usr/bin/env python
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
-import sys
-sys.path.append('./gen-py')
-
-from helloworld import HelloWorld
-
-from thrift import Thrift
 from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
+from example.format_data import Client
+from example.format_data import Data
 
-try:
-  transport = TSocket.TSocket('localhost', 9090)
-  transport = TTransport.TBufferedTransport(transport)
-  protocol = TBinaryProtocol.TBinaryProtocol(transport)
-  client = HelloWorld.Client(protocol)
-  transport.open()
+__HOST = 'localhost'
+__PORT = 8080
 
-  print "client - ping"
-  print "server - " + client.ping()
+tsocket = TSocket.TSocket(__HOST, __PORT)
+transport = TTransport.TBufferedTransport(tsocket)
+protocol = TBinaryProtocol.TBinaryProtocol(transport)
+client = Client(protocol)
 
-  print "client - say"
-  msg = client.say("Hello!")
-  print "server - " + msg
+data = Data('hello,world!')
+transport.open()
 
-  transport.close()
-
-except Thrift.TException, ex:
-  print "%s" % (ex.message)
+print(client.do_format(data).text)

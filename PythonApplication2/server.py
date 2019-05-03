@@ -1,34 +1,30 @@
-#!/usr/bin/env python
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
-import socket
-import sys
-sys.path.append('./gen-py')
-
-from helloworld import HelloWorld
-from helloworld.ttypes import *
-
+from PythonApplication2 import format_data
+from PythonApplication2 import ttypes
 from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 from thrift.server import TServer
 
-class HelloWorldHandler:
-  def ping(self):
-    return "pong"
+__HOST = 'localhost'
+__PORT = 8080
 
-  def say(self, msg):
-    ret = "Received: " + msg
-    print ret
-    return ret
+class FormatDataHandler(object):
+    def do_format(self, data):
+        return ttypes.Data(data.text.upper())
 
-handler = HelloWorldHandler()
-processor = HelloWorld.Processor(handler)
-transport = TSocket.TServerSocket("localhost", 9090)
-tfactory = TTransport.TBufferedTransportFactory()
-pfactory = TBinaryProtocol.TBinaryProtocolFactory()
 
-server = TServer.TSimpleServer(processor, transport, tfactory, pfactory)
+if __name__ == '__main__':
+    handler = FormatDataHandler()
 
-print "Starting thrift server in python..."
-server.serve()
-print "done!"
+    processor = format_data.Processor(handler)
+    transport = TSocket.TServerSocket(__HOST, __PORT)
+    tfactory = TTransport.TBufferedTransportFactory()
+    pfactory = TBinaryProtocol.TBinaryProtocolFactory()
+
+    rpcServer = TServer.TSimpleServer(processor,transport, tfactory, pfactory)
+
+    print('Starting the rpc server at', __HOST,':', __PORT)
+    rpcServer.serve()
