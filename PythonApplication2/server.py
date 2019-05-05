@@ -1,30 +1,9 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
+from xmlrpc.server import SimpleXMLRPCServer
 
-from PythonApplication2 import format_data
-from PythonApplication2 import ttypes
-from thrift.transport import TSocket
-from thrift.transport import TTransport
-from thrift.protocol import TBinaryProtocol
-from thrift.server import TServer
+def speak_your_words(s):
+    print("message from client:", s)
+    return "message from server: " + s
 
-__HOST = 'localhost'
-__PORT = 8080
-
-class FormatDataHandler(object):
-    def do_format(self, data):
-        return ttypes.Data(data.text.upper())
-
-
-if __name__ == '__main__':
-    handler = FormatDataHandler()
-
-    processor = format_data.Processor(handler)
-    transport = TSocket.TServerSocket(__HOST, __PORT)
-    tfactory = TTransport.TBufferedTransportFactory()
-    pfactory = TBinaryProtocol.TBinaryProtocolFactory()
-
-    rpcServer = TServer.TSimpleServer(processor,transport, tfactory, pfactory)
-
-    print('Starting the rpc server at', __HOST,':', __PORT)
-    rpcServer.serve()
+server = SimpleXMLRPCServer(("localhost",9999)) # 绑定端口
+server.register_function(speak_your_words) # 注册函数
+server.serve_forever() #启动监听
