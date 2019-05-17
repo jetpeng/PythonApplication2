@@ -1,11 +1,11 @@
 {
-  "p2p_port": "127.0.0.1:4000",
-  "user_port": "127.0.0.1:4001",
+  "p2p_port": "4000",
+  "user_port": "4001",
   "neighbor_list": [
     {
       "ip": "127.0.0.1",
-      "p2p_port": 4001,
-      "user_port": 4000
+      "p2p_port": 2000,
+      "user_port": 2001
     }
   ]
 }

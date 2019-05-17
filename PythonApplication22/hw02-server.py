@@ -5,7 +5,6 @@ import hashlib
 import time                                                                   
 import random  
 import json
-from io import StringIO
 from time import time
 from urllib.parse import urlparse
 from uuid import uuid4
@@ -58,8 +57,8 @@ class Blockchain:
 
         #Grab and verify the chains from all the nodes
         for node in neighbours:
-            #response = requests.get(f'http://{node}/chain')            
-            #if response.status_code == 200:
+            response = requests.get(f'http://{node}/chain')            
+            if response.status_code == 200:
                 length = response.json()['length']
                 chain = response.json()['chain']
 
@@ -78,10 +77,10 @@ class Blockchain:
         block = {
             'version' : "00000001",
             'index': len(self.chain) + 1,
-            #'timestamp': time(), 
+            'timestamp': time(),
             'transactions': self.current_transactions,
             'merkle_root' : "0000000000000000000000000000000000000000000000000000000000000000",         
-            "target": "0000100000000000000000000000000000000000000000000000000000000000",
+            "target": "0001000000000000000000000000000000000000000000000000000000000000",
             'nonce': nonce,
             'previous_hash': previous_hash or self.hash(self.chain[-1]),
         }
@@ -92,6 +91,7 @@ class Blockchain:
         return block
 
   def new_transaction(self, sender, recipient, amount):
+        #交易，先設定好之後用到
         self.current_transactions.append({
             'sender': sender,
             'recipient': recipient,
@@ -116,13 +116,12 @@ class Blockchain:
         target=last_block['target']
         last_proof = last_block['nonce']
         last_hash = self.hash(last_block)        
-        print(last_hash) 
         nonce = 0        
         #while self.valid_proof(last_proof, nonce, last_hash, version, merkle_root, target) is False:
         vr = self.valid_proof( nonce, last_hash, version, merkle_root, target)
         while vr >= target:
             nonce += 1     
-            vr=self.valid_proof( nonce, last_hash, version, merkle_root, target)                        
+            vr=self.valid_proof( nonce, last_hash, version, merkle_root, target)                
         return nonce,vr
 
   @staticmethod
@@ -130,7 +129,7 @@ class Blockchain:
         #找出pow
         #guess = f'{version}{last_proof}{merkle_root}{nonce}{last_hash}'.encode()
         guess = f'{version}{last_hash}{merkle_root}{target}{nonce}'.encode()
-        guess_hash = hashlib.sha256(guess).hexdigest()        
+        guess_hash = hashlib.sha256(guess).hexdigest()
         return guess_hash
 
 
@@ -142,7 +141,8 @@ blockchain = Blockchain()
 
 #mine
 def mine():
-    last_block = blockchain.last_block        
+    last_block = blockchain.last_block    
+    vr = blockchain.proof_of_work(last_block)
     nonce,previous_hash = blockchain.proof_of_work(last_block)
 
     # The sender is "0" to signify that this node has mined a new coin.
@@ -153,30 +153,15 @@ def mine():
     #)
 
     # Forge the new Block by adding it to the chain
-    #這行有錯
-    #previous_hash = blockchain.hash(last_block)    
-
+    previous_hash = blockchain.hash(last_block)
     version="00000001"
     merkle_root="0000000000000000000000000000000000000000000000000000000000000000"
-    target="0000100000000000000000000000000000000000000000000000000000000000"
+    target="0001000000000000000000000000000000000000000000000000000000000000"
     block = blockchain.new_block(nonce, previous_hash, version, merkle_root, target)  
-    #存到json
-    file_name = 'blockinfo.json'    
-    data = {
-        "version": block['version'], 
-        "index": str(block['index']), 
-        "merkle_root": block['merkle_root'],
-        "transactions": str(block['transactions']), 
-        "nonce": str(block['nonce']), 
-        "previous_hash": block['previous_hash']
-    }       
-    
-    with open(file_name,'a') as file_object:
-     json.dump(data,file_object)     
-
-    return "message: New Block Forged" , "version:" + block['version'] , "index:" + str(block['index']) , "merkle_root:" + block['merkle_root'] , \
-        "transactions:" + str(block['transactions']) , "nonce:" + str(block['nonce']) , \
-        "previous_hash:" + block['previous_hash']
+    return "message: New Block Forged" , "version:" , block['version'] , \
+        "index:" , block['index'] , "merkle_root:" , block['merkle_root'] , \
+        "transactions:" , block['transactions'] , "nonce:" , block['nonce'] , \
+        "previous_hash:" , block['previous_hash']
 
  #execute transation,not yet finish
  #app.route('/transactions/new', methods=['POST'])
@@ -193,45 +178,17 @@ def new_transaction():
 
 #找出chain
 def full_chain():
+    response = {
+        'chain': blockchain.chain,
+        'length': len(blockchain.chain),
+    }
     return 'chain:' , blockchain.chain
-
-#回傳Block數量
-def getBlockcount():    
-    return len(blockchain.chain)
-
-def getBlockhash(c4):    
-    if c4<len(blockchain.chain):
-     return blockchain.chain[c4]
-    else:
-     return "out of data!"
-
-def getBlockheaderhash(c5):    
-    i=0;   
-    b="abc"
-    #findout=str(blockchain.chain[0])
-    #b=findout.find(c5)
-    #return b           
-    while i<len(blockchain.chain):
-      findvalue=str(blockchain.chain[i])
-      findout=findvalue.find(c5)
-      if findout != -1:
-           b=blockchain.chain[i]
-      i=i+1
-
-    if b != "abc":
-     return b
-    else:
-     return "Can't find it!"
-
-    #while (c5 != (blockchain.chain[c2].hash))：
-    # i++
-    #return "out of data!"
 
 #register node
 def register_nodes(nodes):     
     if nodes is None:
         return "Error: Please supply a valid list of nodes"
-    for node in nodes:
+    #for node in nodes:
         blockchain.register_node(nodes)
     return "message:New nodes have been added,total_nodes:" , list(blockchain.nodes)      
 
@@ -240,9 +197,16 @@ def register_nodes(nodes):
 def consensus():
     replaced = blockchain.resolve_conflicts()
     if replaced:
-            return ('new_chain' + blockchain.chain)        
+        response = {
+            'message': 'Our chain was replaced',
+            'new_chain': blockchain.chain
+        }
     else:
-            return ('chain' + blockchain.chain)             
+        response = {
+            'message': 'Our chain is authoritative',
+            'chain': blockchain.chain
+        }
+    return response
 
 class SimpleThreadedXMLRPCServer(ThreadingMixIn, SimpleXMLRPCServer):
     pass
@@ -264,9 +228,6 @@ def run_server():
     server = SimpleThreadedXMLRPCServer(server_addr)
     server.register_function(sleep, 'sleep')
     server.register_function(mine)
-    server.register_function(getBlockcount)
-    server.register_function(getBlockhash)
-    server.register_function(getBlockheaderhash)
     server.register_function(full_chain)
     server.register_function(register_nodes)
     server.register_function(consensus)
