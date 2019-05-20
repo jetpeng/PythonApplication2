@@ -51,29 +51,32 @@ class Blockchain:
             current_index += 1
         return True
 
-  def resolve_conflicts(self):
+  #def resolve_conflicts(self):
+  #      print(self.nodes)
+  #      return 'ok'
+
         #最長鏈原則
-        neighbours = self.nodes
-        new_chain = None
+        #neighbours = self.nodes
+  #      new_chain = None
         #找出最長鏈
-        max_length = len(self.chain)
+  #      max_length = len(self.chain)
 
         #Grab and verify the chains from all the nodes
-        for node in neighbours:
+  #      for node in neighbours:
             #response = requests.get(f'http://{node}/chain')            
             #if response.status_code == 200:
-                length = response.json()['length']
-                chain = response.json()['chain']
+            #    length = response.json()['length']
+            #    chain = response.json()['chain']
 
                 # Check if the length is longer and the chain is valid
-                if length > max_length and self.valid_chain(chain):
-                    max_length = length
-                    new_chain = chain
+            #    if length > max_length and self.valid_chain(chain):
+            #        max_length = length
+            #        new_chain = chain
         # 看哪個是最長鏈
-        if new_chain:
-            self.chain = new_chain
-            return True
-        return False
+  #       if new_chain:
+  #          self.chain = new_chain
+  #          return True
+  #      return False
 
   def new_block(self, nonce, previous_hash,version, merkle_root, target):    
         #建block
@@ -165,6 +168,7 @@ def mine():
     block = blockchain.new_block(nonce, previous_hash, version, merkle_root, target)      
     ip="http://127.0.0.1:" + str(node2p2p_port) + "/"
     print(ip)
+    
     try:
      server3 = xmlrpc.client.ServerProxy(ip, allow_none=True)
      server3.sendblock(target,block['version'],str(block['index']),block['merkle_root'],str(block['transactions']),str(block['nonce']),block['previous_hash'])
@@ -193,8 +197,16 @@ def mine():
         "transactions:" + str(block['transactions']) , "nonce:" + str(block['nonce']) , \
         "previous_hash:" + block['previous_hash']
 
+
+def resolve_conflicts():
+        print(blockchain.nodes)
+        return 'ok'
+
+
 def sendblock(target,version,index,merkle_root,transactions,nonce,previous_hash):
     block = blockchain.new_block(nonce, previous_hash, version, merkle_root, target)      
+    print("received block:\n")
+    print(self.chain[-1])
 
  #execute transation,not yet finish
  #app.route('/transactions/new', methods=['POST'])
@@ -287,6 +299,7 @@ def run_server():
     server = SimpleThreadedXMLRPCServer(server_addr)
     server.register_function(sleep, 'sleep')
     server.register_function(mine)
+    server.register_function(resolve_conflicts)
     server.register_function(getBlockcount)
     server.register_function(getBlockhash)
     server.register_function(getBlockheaderhash)
@@ -316,8 +329,8 @@ def main():
 
 if __name__ == '__main__':
     main()
-    c=input('exit')
-    while c != "exit":
-        print(c)
+   # c=input('exit')
+   # while c != "exit":
+   #     print(c)
 
     #run_server()  

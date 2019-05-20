@@ -30,8 +30,7 @@ while c != "exit":
       a4=str(a).split(',',7)[4]
       a5=str(a).split(',',7)[5]
       a6=str(a).split(',',7)[6]      
-      print(a0 + "\n"+ a1 + "\n" + a2+ "\n" + a3+ "\n"  + a5+ "\n" + a6)      
-      #print(server.mine())            
+      print(a0 + "\n"+ a1 + "\n" + a2+ "\n" + a3+ "\n"  + a5+ "\n" + a6)                     
       print("------------------------")
   elif c == "2":
       print("------------------------")
@@ -58,6 +57,10 @@ while c != "exit":
       c5=input("Input Block Header Hash value:")
       print(server.getBlockheaderhash(c5))       
       print("------------------------")
+  elif c == "6":
+      print("------------------------")
+      print(server.resolve_conflicts())       
+      print("------------------------")      
   else:
       print("Input Error, please try it again!")
   c=input("Select action:\n1:Mine\n2:GetBlock\n3:getBlockCount\n4:getBlockHash\n5.getBlockHeader\nInput'exit'")
