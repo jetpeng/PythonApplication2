@@ -1,6 +1,7 @@
 from xmlrpc.server import SimpleXMLRPCServer
+import xmlrpc.client
 from socketserver import ThreadingMixIn
-from threading import Thread 
+import threading
 import hashlib
 import time                                                                   
 import random  
@@ -18,6 +19,7 @@ class Blockchain:
    self.current_transactions = []
    self.new_block(nonce='00000001',previous_hash='00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000', version='00000001', merkle_root='0000000000000000000000000000000000000000000000000000000000000000', target='0001000000000000000000000000000000000000000000000000000000000000')
 
+   
   def register_node(self, address):
         #申請註冊，加入新node        
         print("call blockchain.register_node")  
@@ -27,8 +29,8 @@ class Blockchain:
         elif parsed_url.path:            
             self.nodes.add(parsed_url.path)
         else:
-            return "Invalid URL"
-         
+            return "Invalid URL"   
+
   def valid_chain(self, chain):
         #check blockchain is valid?
         last_block = chain[0]
@@ -81,7 +83,7 @@ class Blockchain:
             #'timestamp': time(), 
             'transactions': self.current_transactions,
             'merkle_root' : "0000000000000000000000000000000000000000000000000000000000000000",         
-            "target": "0000100000000000000000000000000000000000000000000000000000000000",
+            "target": "0001000000000000000000000000000000000000000000000000000000000000",
             'nonce': nonce,
             'previous_hash': previous_hash or self.hash(self.chain[-1]),
         }
@@ -123,6 +125,7 @@ class Blockchain:
         while vr >= target:
             nonce += 1     
             vr=self.valid_proof( nonce, last_hash, version, merkle_root, target)                        
+            print(vr)
         return nonce,vr
 
   @staticmethod
@@ -159,7 +162,19 @@ def mine():
     version="00000001"
     merkle_root="0000000000000000000000000000000000000000000000000000000000000000"
     target="0000100000000000000000000000000000000000000000000000000000000000"
-    block = blockchain.new_block(nonce, previous_hash, version, merkle_root, target)  
+    block = blockchain.new_block(nonce, previous_hash, version, merkle_root, target)      
+    ip="http://127.0.0.1:" + str(node2p2p_port) + "/"
+    print(ip)
+    try:
+     server3 = xmlrpc.client.ServerProxy(ip, allow_none=True)
+     server3.sendblock(target,block['version'],str(block['index']),block['merkle_root'],str(block['transactions']),str(block['nonce']),block['previous_hash'])
+    except:
+     print("connection error!")     
+    
+    #ip="http://127.0.0.1:" + str(node3p2p_port) + "/"
+    #server4 = xmlrpc.client.ServerProxy(ip, allow_none=True)
+    #server4.sendblock()
+
     #存到json
     file_name = 'blockinfo.json'    
     data = {
@@ -177,6 +192,9 @@ def mine():
     return "message: New Block Forged" , "version:" + block['version'] , "index:" + str(block['index']) , "merkle_root:" + block['merkle_root'] , \
         "transactions:" + str(block['transactions']) , "nonce:" + str(block['nonce']) , \
         "previous_hash:" + block['previous_hash']
+
+def sendblock(target,version,index,merkle_root,transactions,nonce,previous_hash):
+    block = blockchain.new_block(nonce, previous_hash, version, merkle_root, target)      
 
  #execute transation,not yet finish
  #app.route('/transactions/new', methods=['POST'])
@@ -256,11 +274,16 @@ def sleep():
 with open('config.json') as config_file:
     data = json.load(config_file)
 p2p_port = data['p2p_port']
+user_port = data['user_port']
+node2p2p_port = data['neighbor_list'][0]['p2p_port']
+node2user_port = data['neighbor_list'][0]['user_port']
+node3p2p_port = data['neighbor_list'][1]['p2p_port']
+node3user_port = data['neighbor_list'][1]['user_port']
 
 # run server
 def run_server():    
     ip="127.0.0.1"
-    server_addr = (ip , int(p2p_port))
+    server_addr = (ip , int(user_port))
     server = SimpleThreadedXMLRPCServer(server_addr)
     server.register_function(sleep, 'sleep')
     server.register_function(mine)
@@ -270,10 +293,31 @@ def run_server():
     server.register_function(full_chain)
     server.register_function(register_nodes)
     server.register_function(consensus)
-    print("Server thread started. Testing server ...")
-    print('listening on {} port {}'.format(ip, p2p_port))
+    print('listening on {} user port {}'.format(ip, user_port))    
     server.serve_forever()
+
+def run_server2():    
+    ip="127.0.0.1"
+    server_addr2 = (ip , int(p2p_port))
+    server2 = SimpleThreadedXMLRPCServer(server_addr2)
+    server2.register_function(sendblock)    
+    print('listening on {} p2p port {}'.format(ip, p2p_port))
+    server2.serve_forever()
+
+def main():
+    added_thread = threading.Thread(target=run_server)
+    added_thread2 = threading.Thread(target=run_server2)
+    added_thread.start()
+    added_thread2.start()
+    #print(threading.active_count()) # 2
+    #print(threading.enumerate()) # [<_MainThread(MainThread, started 140736627270592)>, <Thread(Thread-1, started 123145466363904)>]
+    #print(threading.current_thread()) #<_MainThread(MainThread, started 140736627270592)>
 
 
 if __name__ == '__main__':
-    run_server()  
+    main()
+    c=input('exit')
+    while c != "exit":
+        print(c)
+
+    #run_server()  

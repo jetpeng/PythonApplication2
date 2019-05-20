@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 with open('config.json') as config_file:
     data = json.load(config_file)
-p2p_port = data['p2p_port']
+user_port = data['user_port']
 
 #def submit_sleep():
 #   server = xmlrpc.client.ServerProxy("http://127.0.0.1:4000/", allow_none=True)
@@ -15,7 +15,7 @@ p2p_port = data['p2p_port']
 #    for future in as_completed(sleeps):
 #        sleep_time = future.result()
 #        print(sleep_time)
-ip="http://127.0.0.1:" + p2p_port + "/"
+ip="http://127.0.0.1:" + str(user_port) + "/"
 server = xmlrpc.client.ServerProxy(ip, allow_none=True)
 c=input("Select action:\n1:Mine\n2:GetBlock\n3:getBlockCount\n4:getBlockHash\n5.getBlockHeader\nInput'exit'")
 

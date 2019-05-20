@@ -6,18 +6,21 @@ with open('config.json') as config_file:
     data = json.load(config_file)
 p2p_port = data['p2p_port']
 
-#def submit_sleep():
-#   server = xmlrpc.client.ServerProxy("http://127.0.0.1:4000/", allow_none=True)
-#   return server.sleep()
 
+def submit_sleep():
+   server = xmlrpc.client.ServerProxy("http://127.0.0.1:4001/", allow_none=True)
+   return server.sleep()
+
+#
 #with ThreadPoolExecutor() as executor:
 #    sleeps = {executor.submit(submit_sleep) for _ in range(4)}
 #    for future in as_completed(sleeps):
 #        sleep_time = future.result()
 #        print(sleep_time)
-ip="http://127.0.0.1:" + p2p_port + "/"
-server = xmlrpc.client.ServerProxy(ip, allow_none=True)
-c=input("Select action:\n1:Mine()\n2:Full_chain()\n3:Register_nodes()\n4:Consensus()\nInput'exit'\n")
+
+server = xmlrpc.client.ServerProxy("http://127.0.0.1:4001/", allow_none=True)
+#server = xmlrpc.client.ServerProxy("http://127.0.0.1:4000")
+c=input("請選擇動作\n1:Mine()\n2:Full_chain()\n3:Register_nodes()\n4:Consensus()\n離開請輸入'exit'\n")
 while c != "exit":
   if c == "1":
       print("\nMine finish!")
@@ -33,4 +36,4 @@ while c != "exit":
       print(server.consensus())     
   else:
       print("Input Error , please try again!")
-  c=input("Select action:\n1:Mine()\n2:Full_chain()\n3:Register_nodes()\n4:Consensus()\nInput'exit'\n")    
+  c=input("請選擇動作\n1:Mine()\n2:Full_chain()\n3:Register_nodes()\n4:Consensus()\n離開請輸入'exit'\n")
