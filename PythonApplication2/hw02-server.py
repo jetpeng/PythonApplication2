@@ -15,7 +15,7 @@ import requests
 class Blockchain:
   def __init__(self):
    self.chain = []
-   self.nodes = set()
+   #self.nodes = set()
    self.current_transactions = []
    self.new_block(nonce='00000001',previous_hash='00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000', version='00000001', merkle_root='0000000000000000000000000000000000000000000000000000000000000000', target='0001000000000000000000000000000000000000000000000000000000000000')
 
@@ -51,16 +51,13 @@ class Blockchain:
             current_index += 1
         return True
 
-  #def resolve_conflicts(self):
-  #      print(self.nodes)
-  #      return 'ok'
-
+  def resolve_conflicts(self):      
         #最長鏈原則
         #neighbours = self.nodes
-  #      new_chain = None
+        new_chain = None
         #找出最長鏈
-  #      max_length = len(self.chain)
-
+        max_length = len(self.chain)
+        print(max_length)
         #Grab and verify the chains from all the nodes
   #      for node in neighbours:
             #response = requests.get(f'http://{node}/chain')            
@@ -119,7 +116,8 @@ class Blockchain:
         version=last_block['version']
         merkle_root=last_block['merkle_root']
         target=last_block['target']
-        last_proof = last_block['nonce']
+        #last_proof = last_block['nonce']
+        last_proof = last_block['previous_hash']
         last_hash = self.hash(last_block)        
         print(last_hash) 
         nonce = 0        
@@ -168,7 +166,7 @@ def mine():
     block = blockchain.new_block(nonce, previous_hash, version, merkle_root, target)      
     ip="http://127.0.0.1:" + str(node2p2p_port) + "/"
     print(ip)
-    
+    blockchain.resolve_conflicts()    
     try:
      server3 = xmlrpc.client.ServerProxy(ip, allow_none=True)
      server3.sendblock(target,block['version'],str(block['index']),block['merkle_root'],str(block['transactions']),str(block['nonce']),block['previous_hash'])
@@ -196,12 +194,6 @@ def mine():
     return "message: New Block Forged" , "version:" + block['version'] , "index:" + str(block['index']) , "merkle_root:" + block['merkle_root'] , \
         "transactions:" + str(block['transactions']) , "nonce:" + str(block['nonce']) , \
         "previous_hash:" + block['previous_hash']
-
-
-def resolve_conflicts():
-        print(blockchain.nodes)
-        return 'ok'
-
 
 def sendblock(target,version,index,merkle_root,transactions,nonce,previous_hash):
     block = blockchain.new_block(nonce, previous_hash, version, merkle_root, target)      
@@ -299,7 +291,7 @@ def run_server():
     server = SimpleThreadedXMLRPCServer(server_addr)
     server.register_function(sleep, 'sleep')
     server.register_function(mine)
-    server.register_function(resolve_conflicts)
+    #server.register_function(resolve_conflicts)
     server.register_function(getBlockcount)
     server.register_function(getBlockhash)
     server.register_function(getBlockheaderhash)
