@@ -17,7 +17,7 @@ user_port = data['user_port']
 #        print(sleep_time)
 ip="http://127.0.0.1:" + str(user_port) + "/"
 server = xmlrpc.client.ServerProxy(ip, allow_none=True)
-c=input("Select action:\n1:Mine\n2:GetBlock\n3:getBlockCount\n4:getBlockHash\n5.getBlockHeader\nInput'exit'")
+c=input("Select action:\n1:Mine\n2:GetBlock\n3:getBlockCount\n4:getBlockHash\n5.getBlockHeader\n6.sendtoaddress\n7.getbalance\nInput'exit'")
 
 while c != "exit":
   if c == "1":      

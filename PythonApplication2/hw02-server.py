@@ -79,28 +79,17 @@ class Blockchain:
   #      return False
   def new_block(self, nonce, prev_block,version, transactions_hash, thenodetarget, beneficiary):    
         #建block
-        print(self.current_transactions)        
-        print(len(self.chain))
-        print(self.chain)
-        #print(self.chain['transactions'])     
-        #print(self.chain[0]['transactions']['signature'])
-        trans_hash='123'
-        #print(self.current_transactions[0][])
-        #if (self.current_transactions == '[]'):
-        # trans_hash = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
-        #else :
-        #     i=0
-        #     allsignature=''
-        #     while i<len(self.current_transactions):
-        #      benevalue=self.current_transactions[i]
-        #      benevalue2=benevalue['signature']                 
-        #      print(benevalue)
-        #      allsignature = allsignature + benevalue2
-        #      i=i+1     
-        #     trans_hash = hashlib.sha256(allsignature).hexdigest()
-             
-        #print(trans_hash)       
-
+        a2= len(self.current_transactions)
+        totalsign=''        
+        #先合併signature的值 再做sha，找出trans_hash值
+        if str(self.current_transactions) != '[]':                
+         bar = self.current_transactions         
+         i=0
+         while (i<a2):             
+             totalsign = totalsign + bar[i]['signature']
+             i=i+1        
+        trans_hash= hashlib.sha256(totalsign.encode()).hexdigest()
+                
         block = {
             'version' : "00000002",
             'index': len(self.chain) + 1, 
